@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+	<LangVersion>latest</LangVersion>
+	<Nullable>enable</Nullable>
+	<RepositoryUrl>https://github.com/ChengYen-Tang/Kwargs.Net</RepositoryUrl>
+	<Authors>Kenneth Tang</Authors>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+	<Description>This library allows dotnet developers to use **kwargs (Keyword Arguments) to create instance or call function like python developers</Description>
+  </PropertyGroup>
+
+</Project>
