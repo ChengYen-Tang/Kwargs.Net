@@ -8,17 +8,22 @@ namespace Kwargs.Net
 {
     public static class Reflection
     {
-        public static T? CreateInstance<T>(object[] fixedParameters, IDictionary<string, object> kwargs)
+        public static T CreateInstance<T>(object[] fixedParameters, IDictionary<string, object> kwargs)
             where T : class
         {
             Type type = typeof(T);
-            (int _, ConstructorInfo ctor, List<object> parameters) = GetParameters(type.GetConstructors(), fixedParameters, kwargs);
-            return parameters.Any()
-                ? ctor.Invoke(parameters.ToArray()) as T
-                : Activator.CreateInstance<T>();
+            return (CreateInstance(type, fixedParameters, kwargs) as T)!;
         }
 
-        public static object? CallFunction(Type type, string methodName, object[] fixedParameters, IDictionary<string, object> kwargs)
+        public static object CreateInstance(Type type, object[] fixedParameters, IDictionary<string, object> kwargs)
+        {
+            (int _, ConstructorInfo ctor, List<object> parameters) = GetParameters(type.GetConstructors(), fixedParameters, kwargs);
+            return parameters.Any()
+                ? ctor.Invoke(parameters.ToArray())
+                : Activator.CreateInstance(type);
+        }
+
+        public static object CallFunction(Type type, string methodName, object[] fixedParameters, IDictionary<string, object> kwargs)
         {
             MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).Where(item => item.Name == methodName).ToArray();
             Trace.Assert(methods.Any(), $"Static method: {methodName} not found.");
@@ -28,7 +33,7 @@ namespace Kwargs.Net
                 : method.Invoke(null, null);
         }
 
-        public static object? CallFunction(object o, string methodName, object[] fixedParameters, IDictionary<string, object> kwargs)
+        public static object CallFunction(object o, string methodName, object[] fixedParameters, IDictionary<string, object> kwargs)
         {
             MethodInfo[] methods = o.GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Where(item => item.Name == methodName).ToArray();
             Trace.Assert(methods.Any(), $"Static method: {methodName} not found.");
