@@ -8,32 +8,29 @@ This library allows dotnet developers to use **kwargs (Keyword Arguments) to cre
 using CreateInstance;
 using Kwargs.Net;
 
-Dictionary<string, object> kwargs = new Dictionary<string, object>
-        {
-            { "v1", 5 },
-            { "s1", "123" },
-        };
-TestClass testClass = Reflection.CreateInstance<TestClass>(kwargs)!;
+Dictionary<string, object> kwargs = new()
+{
+    { "v1", 5 },
+    { "s1", "123" },
+};
+TestClass testClass = Reflection.CreateInstance<TestClass>(Array.Empty<object>(), kwargs)!;
 Console.WriteLine($"V1: {testClass.V1}, S1: {testClass.S1}, V2: {testClass.V2}, S2: {testClass.S2}, F1: {testClass.F1}");
 // V1: 5, S1: 123, V2: , S2: , F1:
 
-kwargs = new Dictionary<string, object>
-        {
-            { "v1", 5 },
-            { "v2", 7 },
-            { "s1", "123" },
-        };
-testClass = Reflection.CreateInstance<TestClass>(kwargs)!;
+kwargs = new()
+{
+    { "v2", 7 },
+};
+testClass = Reflection.CreateInstance<TestClass>(new object[] { 5, "123" }, kwargs)!;
 Console.WriteLine($"V1: {testClass.V1}, S1: {testClass.S1}, V2: {testClass.V2}, S2: {testClass.S2}, F1: {testClass.F1}");
 // V1: 5, S1: 123, V2: 7, S2: , F1:
 
-kwargs = new Dictionary<string, object>
-        {
-            { "v1", 5 },
-            { "f1", 5f },
-            { "s1", "123" },
-        };
-testClass = Reflection.CreateInstance<TestClass>(kwargs)!;
+kwargs = new()
+{
+    { "f1", 5f },
+    { "s1", "123" },
+};
+testClass = Reflection.CreateInstance<TestClass>(new object[] { 5 }, kwargs)!;
 Console.WriteLine($"V1: {testClass.V1}, S1: {testClass.S1}, V2: {testClass.V2}, S2: {testClass.S2}, F1: {testClass.F1}");
 // V1: 5, S1: 123, V2: , S2: , F1: 5
 ```
@@ -74,7 +71,7 @@ public class TestClass
 using CallStaticFunction;
 using Kwargs.Net;
 
-var result = Reflection.CallFunction(typeof(TestClass), nameof(TestClass.Test), new Dictionary<string, object>());
+var result = Reflection.CallFunction(typeof(TestClass), nameof(TestClass.Test), Array.Empty<object>(), new Dictionary<string, object>());
 Console.WriteLine(result);
 // 123
 ```
@@ -91,7 +88,7 @@ using CallObjectFunction;
 using Kwargs.Net;
 
 TestClass testClass = new();
-var result = Reflection.CallFunction(testClass, nameof(testClass.Test), new Dictionary<string, object> { { "a", 5 } });
+var result = Reflection.CallFunction(testClass, nameof(testClass.Test), Array.Empty<object>(), new Dictionary<string, object> { { "a", 5 } });
 Console.WriteLine(result);
 // 5
 // 6

@@ -8,37 +8,37 @@ namespace Kwargs.Net
 {
     public static class Reflection
     {
-        public static T? CreateInstance<T>(IDictionary<string, object> kwargs)
+        public static T? CreateInstance<T>(object[] fixedParameters, IDictionary<string, object> kwargs)
             where T : class
         {
             Type type = typeof(T);
-            (int _, ConstructorInfo ctor, List<object> parameters) = GetParameters(type.GetConstructors(), kwargs);
+            (int _, ConstructorInfo ctor, List<object> parameters) = GetParameters(type.GetConstructors(), fixedParameters, kwargs);
             return parameters.Any()
                 ? ctor.Invoke(parameters.ToArray()) as T
                 : Activator.CreateInstance<T>();
         }
 
-        public static object? CallFunction(Type type, string methodName, IDictionary<string, object> kwargs)
+        public static object? CallFunction(Type type, string methodName, object[] fixedParameters, IDictionary<string, object> kwargs)
         {
             MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).Where(item => item.Name == methodName).ToArray();
             Trace.Assert(methods.Any(), $"Static method: {methodName} not found.");
-            (int kwargsUseCount, MethodInfo method, List<object> parameters) = GetParameters(methods, kwargs);
+            (int kwargsUseCount, MethodInfo method, List<object> parameters) = GetParameters(methods, fixedParameters, kwargs);
             return parameters.Any()
                 ? method.Invoke(null, parameters.ToArray())
                 : method.Invoke(null, null);
         }
 
-        public static object? CallFunction(object o, string methodName, IDictionary<string, object> kwargs)
+        public static object? CallFunction(object o, string methodName, object[] fixedParameters, IDictionary<string, object> kwargs)
         {
             MethodInfo[] methods = o.GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Where(item => item.Name == methodName).ToArray();
             Trace.Assert(methods.Any(), $"Static method: {methodName} not found.");
-            (int kwargsUseCount, MethodInfo method, List<object> parameters) = GetParameters(methods, kwargs);
+            (int kwargsUseCount, MethodInfo method, List<object> parameters) = GetParameters(methods, fixedParameters, kwargs);
             return parameters.Any()
                 ? method.Invoke(o, parameters.ToArray())
                 : method.Invoke(null, null);
         }
 
-        private static (int, T, List<object>) GetParameters<T>(T[] infos, IDictionary<string, object> kwargs)
+        private static (int, T, List<object>) GetParameters<T>(T[] infos, object[] fixedParameters, IDictionary<string, object> kwargs)
             where T : MethodBase
         {
             List<(int, T, List<object>)> methodParameters = new();
@@ -47,9 +47,20 @@ namespace Kwargs.Net
                 List<object> parameters = new();
                 bool isIterateToTheEnd = true;
                 int kwargsUseCount = 0;
-                foreach (ParameterInfo param in method.GetParameters())
+                foreach ((int index, ParameterInfo param) in method.GetParameters().Select((value, index) => (index, value)))
                 {
-                    if (kwargs.ContainsKey(param.Name!))
+                    if (index < fixedParameters.Length)
+                    {
+                        Type fixedParameterType = fixedParameters[index].GetType();
+                        Type paramType = param.ParameterType;
+                        if (fixedParameterType != paramType && !fixedParameterType.IsSubclassOf(paramType))
+                        {
+                            isIterateToTheEnd = false;
+                            break;
+                        }
+                        parameters.Add(fixedParameters[index]);
+                    }
+                    else if (kwargs.ContainsKey(param.Name!))
                     {
                         parameters.Add(kwargs[param.Name!]);
                         kwargsUseCount++;
