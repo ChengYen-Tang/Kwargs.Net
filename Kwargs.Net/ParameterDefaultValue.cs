@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Reflection;
-using System.Runtime.Serialization;
+using System.Runtime.CompilerServices;
 
 namespace Kwargs.Net
 {

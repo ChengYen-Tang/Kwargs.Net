@@ -15,7 +15,7 @@ namespace Kwargs.Net
             return (CreateInstance(type, fixedParameters, kwargs) as T)!;
         }
 
-        public static object CreateInstance(Type type, object[] fixedParameters, IDictionary<string, object> kwargs)
+        public static object? CreateInstance(Type type, object[] fixedParameters, IDictionary<string, object> kwargs)
         {
             (int _, ConstructorInfo ctor, List<object> parameters) = GetParameters(type.GetConstructors(), fixedParameters, kwargs);
             return parameters.Any()
@@ -23,7 +23,7 @@ namespace Kwargs.Net
                 : Activator.CreateInstance(type);
         }
 
-        public static object CallFunction(Type type, string methodName, object[] fixedParameters, IDictionary<string, object> kwargs)
+        public static object? CallFunction(Type type, string methodName, object[] fixedParameters, IDictionary<string, object> kwargs)
         {
             MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).Where(item => item.Name == methodName).ToArray();
             Trace.Assert(methods.Any(), $"Static method: {methodName} not found.");
@@ -33,7 +33,7 @@ namespace Kwargs.Net
                 : method.Invoke(null, null);
         }
 
-        public static object CallFunction(object o, string methodName, object[] fixedParameters, IDictionary<string, object> kwargs)
+        public static object? CallFunction(object o, string methodName, object[] fixedParameters, IDictionary<string, object> kwargs)
         {
             MethodInfo[] methods = o.GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Where(item => item.Name == methodName).ToArray();
             Trace.Assert(methods.Any(), $"Static method: {methodName} not found.");
@@ -46,6 +46,8 @@ namespace Kwargs.Net
         private static (int, T, List<object>) GetParameters<T>(T[] infos, object[] fixedParameters, IDictionary<string, object> kwargs)
             where T : MethodBase
         {
+            fixedParameters ??= Array.Empty<object>();
+            kwargs ??= new Dictionary<string, object>();
             List<(int, T, List<object>)> methodParameters = new();
             foreach (MethodBase method in infos)
             {
